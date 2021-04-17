@@ -22,7 +22,8 @@ from random import randint, random
 
 
 def get_yaw_from_pose(p):
-    """ A helper function that takes in a Pose object (geometry_msgs) and returns yaw"""
+    """ A helper function that takes in a Pose object (geometry_msgs) 
+    and returns yaw """
 
     yaw = (euler_from_quaternion([
             p.orientation.x,
@@ -41,23 +42,31 @@ def draw_random_sample(n, list, prob):
 
     # get an array of numbers that correspond to indices in the list with 
     #   a specific prob value
-    prob_indices = []
+    prob_idxs = []
     for i in range(len(list)):
         if list[i] == prob:
-            prob_indices.append(int(i))
+            prob_idxs.append(int(i))
 
-    # randomly sample n elements as indices to choose from prob_indices
-    random_nums = len(prob_indices) * random_sample((n, ))
+    # randomly sample n elements as indices to choose from prob_idxs
+    random_nums = len(prob_idxs) * random_sample((n, ))
     random_nums = random_nums.astype(int)
 
-    # return randomly chosen elements in prob_indices as a new array, with
+    # return randomly chosen elements in prob_idxs as a new array, with
     #   each new element being the index in list that corresponds to coordinates
     #   with a specific color, such as light gray (inside the house)
-    list_indices = []
+    list_idxs = []
     for i in random_nums:
-        list_indices.append(prob_indices[i])
+        list_idxs.append(prob_idxs[i])
     
-    return list_indices
+    return list_idxs
+
+def compute_prob_zero_centered_gaussian(dist, sd):
+    """ Takes in distance from zero (dist) and standard deviation (sd) for 
+    gaussian and returns probability (likelihood) of observation """
+
+    c = 1.0 / (sd * math.sqrt(2 * math.pi))
+    prob = c * math.exp((-math.pow(dist,2))/(2 * math.pow(sd, 2)))
+    return prob
 
 
 class Particle:
@@ -290,8 +299,31 @@ class ParticleFilter:
 
     
     def update_particle_weights_with_measurement_model(self, data):
+        """ Update the particle weights using the likelihood field for
+        range finders model """
+        
+        # wait until initialization is complete
+        if not(self.initialized):
+            return
 
-        # TODO
+        # takes into account all 360 degrees of scan data
+        cardinal_directions_idxs = range(360)
+
+        # computes the new probabilities for all particles based on model
+        for part in self.particle_cloud:
+            q = 1
+            for ang in cardinal_directions_idxs:
+                ztk = data.ranges[ang]
+                if ztk > 3.5:
+                    ztk = 3.5
+                x_ztk = part.pose.position.x + ztk * math.cos(part.theta + math.radians(ang))
+                y_ztk = part.pose.position.y + ztk * math.sin(part.theta + math.radians(ang))
+                dist = self.likelihood_field.get_closest_obstacle_distance(x_ztk, y_ztk)
+                # print("x_ztk: " + str(x_ztk) + " y_ztk: " + str(y_ztk) + " dist: " + str(dist))
+                # print("ztk: "+ str(ztk) + " prob: " + str(1 * compute_prob_zero_centered_gaussian(dist, 0.1)) + "\n")
+                q = q * (1 * compute_prob_zero_centered_gaussian(dist, 0.1))
+            part.w = q
+            
         return
         
 
@@ -311,7 +343,7 @@ class ParticleFilter:
         # move all the particles correspondingly
         for part in self.particle_cloud:          
             p = part.pose
-            part.pose.position.x += dx
+            p.position.x += dx
             p.position.y += dy
             new_yaw = get_yaw_from_pose(p) + dyaw
             q = quaternion_from_euler(0.0, 0.0, new_yaw)
