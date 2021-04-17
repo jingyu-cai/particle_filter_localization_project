@@ -60,12 +60,14 @@ def draw_random_sample(n, list, prob):
     
     return list_idxs
 
+
 def compute_prob_zero_centered_gaussian(dist, sd):
     """ Takes in distance from zero (dist) and standard deviation (sd) for 
     gaussian and returns probability (likelihood) of observation """
 
     c = 1.0 / (sd * math.sqrt(2 * math.pi))
-    prob = c * math.exp((-math.pow(dist,2))/(2 * math.pow(sd, 2)))
+    prob = c * math.exp((-math.pow(dist, 2)) / (2 * math.pow(sd, 2)))
+    
     return prob
 
 
@@ -323,7 +325,7 @@ class ParticleFilter:
                 # print("ztk: "+ str(ztk) + " prob: " + str(1 * compute_prob_zero_centered_gaussian(dist, 0.1)) + "\n")
                 q = q * (1 * compute_prob_zero_centered_gaussian(dist, 0.1))
             part.w = q
-            
+
         return
         
 
