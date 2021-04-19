@@ -35,6 +35,16 @@ def get_yaw_from_pose(p):
     return yaw
 
 
+def compute_prob_zero_centered_gaussian(dist, sd):
+    """ Takes in distance from zero (dist) and standard deviation (sd) for 
+    gaussian and returns probability (likelihood) of observation """
+
+    c = 1.0 / (sd * math.sqrt(2 * math.pi))
+    prob = c * math.exp((-math.pow(dist, 2)) / (2 * math.pow(sd, 2)))
+    
+    return prob
+
+
 def draw_random_sample(n, list, prob):
     """ Draws a random sample of n elements from a given list of choices 
     and their specified probabilities. We recommend that you fill in this 
@@ -59,16 +69,6 @@ def draw_random_sample(n, list, prob):
         list_idxs.append(prob_idxs[i])
     
     return list_idxs
-
-
-def compute_prob_zero_centered_gaussian(dist, sd):
-    """ Takes in distance from zero (dist) and standard deviation (sd) for 
-    gaussian and returns probability (likelihood) of observation """
-
-    c = 1.0 / (sd * math.sqrt(2 * math.pi))
-    prob = c * math.exp((-math.pow(dist, 2)) / (2 * math.pow(sd, 2)))
-    
-    return prob
 
 
 class Particle:
@@ -180,8 +180,10 @@ class ParticleFilter:
             p.orientation.y = q[1]
             p.orientation.z = q[2]
             p.orientation.w = q[3]
+
             # initialize the new particle, where all will have the same weight (1.0)
             new_particle = Particle(p, 1.0)
+            
             # append the particle to the particle cloud
             self.particle_cloud.append(new_particle)
 
@@ -191,11 +193,18 @@ class ParticleFilter:
 
 
     def normalize_particles(self):
+        """ Normalize the particle weights so they add up to 1 """
+
+        # initialize sum variable to normalize
         sum = 0
+
+        # add up all the particle weights into sum
         for part in self.particle_cloud:
             sum += part.w
+
+        # reassign weights by dividing each particle's original weight by sum
         for part in self.particle_cloud:
-            part.w = part.w/sum
+            part.w = part.w / sum
 
         return
 
@@ -221,8 +230,36 @@ class ParticleFilter:
 
 
     def resample_particles(self):
+        """ Apply low-variance resampling to algorithm to preserve particles
+        with greater weights into the next iteration """
 
-        # TODO
+        # initialize new array to store the resampled particles
+        new_particle_cloud = []
+
+        # set up some variables for the resampling algorithm
+        particle_cloud_len = len(self.particle_cloud)
+        r = (1 / particle_cloud_len) * random_sample()
+        c = self.particle_cloud[0].w
+        i = 0
+
+        # resample the particles into the new_particle_cloud array, basically,
+        #   particles with greater weights will result in a higher c value, 
+        #   so they are more likely to be resampled into the next iteration
+        for j in range(particle_cloud_len):
+            # update the position of the sample point
+            U = r + j * (1 / particle_cloud_len)
+
+            # find the particle whose weight puts c past the sample point
+            while U > c:
+                i += 1
+                c += self.particle_cloud[i].w
+            
+            # append the particle onto the new_particle_cloud array
+            new_particle_cloud.append(self.particle_cloud[i])
+
+        # reassign particle_cloud with the resample particles
+        self.particle_cloud = new_particle_cloud
+
         return
 
 
@@ -311,10 +348,10 @@ class ParticleFilter:
         if not(self.initialized):
             return
 
-        # takes into account all 360 degrees of scan data
+        # take into account all 360 degrees of scan data
         cardinal_directions_idxs = range(360)
 
-        # computes the new probabilities for all particles based on model
+        # compute the new probabilities for all particles based on model
         for part in self.particle_cloud:
             q = 1
             for ang in cardinal_directions_idxs:
@@ -333,6 +370,8 @@ class ParticleFilter:
         
 
     def update_particles_with_motion_model(self):
+        """ Calculates how much the robot has moved using odometry and
+        move all the particles correspondingly by the same amount """
 
         # calculate how the robot has moved
         curr_x = self.odom_pose.pose.position.x
