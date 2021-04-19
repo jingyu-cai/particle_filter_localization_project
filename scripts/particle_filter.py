@@ -336,9 +336,34 @@ class ParticleFilter:
     def update_estimated_robot_pose(self):
         # based on the particles within the particle cloud, update the robot pose estimate
         
-        # TODO
-        return
+        # initialize sum variables to average
+        px = py = pz = 0 
+        ox = oy = oz = ow = 0
 
+        for part in self.particle_cloud:
+            p = part.pose
+            px += p.position.x
+            py += p.position.y
+            pz += p.position.z
+
+            ox += p.orientation.x
+            oy += p.orientation.y
+            oz += p.orientation.z
+            ow += p.orientation.w
+
+        # update estimated robot pose by taking the average of all particle poses 
+        num = len(self.particle_cloud)
+        self.robot_estimate.position.x = px/num
+        self.robot_estimate.position.y = py/num
+        self.robot_estimate.position.z = pz/num
+        self.robot_estimate.orientation.x = ox/num
+        self.robot_estimate.orientation.y = oy/num
+        self.robot_estimate.orientation.z = oz/num
+        self.robot_estimate.orientation.w = ow/num
+
+        self.publish_particle_cloud()
+
+        return
     
     def update_particle_weights_with_measurement_model(self, data):
         """ Update the particle weights using the likelihood field for
@@ -358,8 +383,9 @@ class ParticleFilter:
                 ztk = data.ranges[ang]
                 if ztk > 3.5:
                     ztk = 3.5
-                x_ztk = part.pose.position.x + ztk * math.cos(part.theta + math.radians(ang))
-                y_ztk = part.pose.position.y + ztk * math.sin(part.theta + math.radians(ang))
+                theta = get_yaw_from_pose(part.pose)
+                x_ztk = part.pose.position.x + ztk * math.cos(theta + math.radians(ang))
+                y_ztk = part.pose.position.y + ztk * math.sin(theta + math.radians(ang))
                 dist = self.likelihood_field.get_closest_obstacle_distance(x_ztk, y_ztk)
                 # print("x_ztk: " + str(x_ztk) + " y_ztk: " + str(y_ztk) + " dist: " + str(dist))
                 # print("ztk: "+ str(ztk) + " prob: " + str(1 * compute_prob_zero_centered_gaussian(dist, 0.1)) + "\n")
