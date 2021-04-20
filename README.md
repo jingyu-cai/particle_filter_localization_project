@@ -14,3 +14,52 @@
 * 4/18: Complete `initialize_particle_cloud()`, `update_particles_with_motion_model()`, and `update_particle_weights_with_measurement_model()`.
 * 4/21: Complete `normalize_particles()`, `resample_particles()`, and `update_estimated_robot_pose()`.
 * 4/25: Add noise into the system and ensure the code works with rigorous testing.
+
+## Writeup
+### Objectives description
+The goal of this project is to solve the problem of robot localization using the particle filter algorithm. Specifically, by implementing each component of the particle filter algorithm, we will be able to predict the location of the robot with the states of the particles as it moves through an environment.
+### High-level description
+We followed the steps for implementing the particle filter algorithm illustrated on the project page and in the lectures. There are seven main components to solve robot localization: first being randomly initializing the particle cloud within the specified environment, second being updating the poses of the particles correspondingly to the movement of the robot, third being computing the weights for each particle after movement using the likelihood field for range finders model, fourth being normalizing and resampling the particles based on their weights to converge to the likely locations of the robot, fifth being incorporating movement noise to add robustness to the model, sixth being updating the estimated robot pose, and seventh being optimizing the parameters to more efficiently solve robot localization.
+### Code explanation
+#### Initialization of particle cloud
+##### Code location
+For initializing the particle cloud, I first wrote a helper function `draw_random_sample()` to randomize the distribution of particles, and the main code is located in the function `initialize_particle_cloud()`. I also used the `quaternion_from_euler()` function from library imports.
+##### Functions/code description
+* `draw_random_sample()`: In this function, n elements with a specified probability are drawn with replacement from a list of choices. In the context of this project, this function randomly chooses coordinates inside the boundaries of the house from the map list to be populated with particles.
+* `initialize_particle_cloud()`: In this function, particles are being initialized with random locations and orientations throughout the map. By using the `draw_random_sample()` function, I was able to randomly obtain coordinates that correspond to a value of 0, which is light gray color inside the house, from `self.map.data`. These random particles will be used to localize the robot.
+#### Movement model
+##### Code location
+For the movement model, the code is located in the function `update_particles_with_motion_model()`. I also used the given functions from the starter code and imports, including `get_yaw_from_pos()` and `quaternion_from_euler()`.
+##### Functions/code description
+* `update_particles_with_motion_model()`: This function calculates how much the robot has moved using odometry and updates the poses of all the particles accordingly by the same amount. Therefore, the updated particles can then be fed into the next step in the measurement model.
+#### Measurement model
+##### Code location
+For the measurement model, the code is located in the function `update_particle_weights_with_measurement_model()`. I also used code given by the starter code and class 06, including `get_yaw_from_pose()`, `get_closest_obstacle_distance()`, and `compute_prob_zero_centered_gaussian()`. 
+##### Functions/code description
+* `update_particle_weights_with_measurement_model()`: This function uses the likelihood field for range finders model discussed in class 06 to update the weights of the particles. By doing so, particles that better reflect the likely positions of the robot will be assigned with a greater weight to localize the robot.
+#### Resampling
+##### Code location
+For resampling, the code is located in the function `resample_particles()`. 
+##### Functions/code description
+* `resample_particles()`: For this function, I used the `choice()` function from `np.random` to sample particles with probabilities proportionate to their weights. In other words, particles with greater weights will be more likely to be resampled into the next iteration. 
+#### Incorporation of noise
+##### Code location
+TODO
+##### Functions/code description
+TODO
+#### Updating estimated robot pose
+##### Code location
+For updating the estimated robot pose, the code is located in the function `update_estimated_robot_pose()`.
+##### Functions/code description
+* `update_estimated_robot_pose()`: This function updates the robot's estimated pose by taking an average of all the positions and orientations of the particles. As a result, since particles that more likely represent the likely locations of the robot are preserved, the average would converge onto the robot's true location, thus solving the problem of robot localization.
+#### Optimization of parameters
+##### Code location
+TODO
+##### Functions/code description
+TODO
+### Challenges
+TODO
+### Future work
+TODO
+### Takeaways
+TODO

@@ -14,11 +14,12 @@ from tf import TransformBroadcaster
 from tf.transformations import quaternion_from_euler, euler_from_quaternion
 
 import numpy as np
-from numpy.random import random_sample
+from numpy.random import random_sample, choice
 import math
 
 from random import randint, random
 
+from copy import deepcopy
 
 
 def get_yaw_from_pose(p):
@@ -166,13 +167,15 @@ class ParticleFilter:
         r = self.map.info.resolution
         x = self.map.info.origin.position.x
         y = self.map.info.origin.position.y
+        w = self.map.info.width
+        h = self.map.info.height
         
         for i in range(self.num_particles):
             # set pose data for particle
             p = Pose()
             p.position = Point()
-            p.position.x = (random_indices[i] % 384) * r + x
-            p.position.y = (random_indices[i] // 384) * r + y
+            p.position.x = (random_indices[i] % w) * r + x
+            p.position.y = (random_indices[i] // h) * r + y
             p.position.z = 0
             p.orientation = Quaternion()
             q = quaternion_from_euler(0.0, 0.0, math.radians(360 * random_sample()))
@@ -230,36 +233,20 @@ class ParticleFilter:
 
 
     def resample_particles(self):
-        """ Apply low-variance resampling to algorithm to preserve particles
-        with greater weights into the next iteration """
+        """ Resample particles with probabilities proportionate to their weights """
 
-        # initialize new array to store the resampled particles
-        new_particle_cloud = []
+        # create an array of particle weights
+        particle_weights = []
+        for part in self.particle_cloud:
+            particle_weights.append(part.w)
 
-        # set up some variables for the resampling algorithm
-        particle_cloud_len = len(self.particle_cloud)
-        r = (1 / particle_cloud_len) * random_sample()
-        c = self.particle_cloud[0].w
-        i = 0
+        # sample particles with probabilities proportinate to their weights
+        new_particle_cloud = choice(self.particle_cloud, self.num_particles, p = particle_weights)
 
-        # resample the particles into the new_particle_cloud array, basically,
-        #   particles with greater weights will result in a higher c value, 
-        #   so they are more likely to be resampled into the next iteration
-        for j in range(particle_cloud_len):
-            # update the position of the sample point
-            U = r + j * (1 / particle_cloud_len)
-
-            # find the particle whose weight puts c past the sample point
-            while U > c:
-                i += 1
-                c += self.particle_cloud[i].w
-            
-            # append the particle onto the new_particle_cloud array
-            new_particle_cloud.append(self.particle_cloud[i])
-
-        # reassign particle_cloud with the resample particles
-        self.particle_cloud = new_particle_cloud
-
+        # deepcopy these newly sampled particles into particle_cloud
+        for i in range(self.num_particles):
+            self.particle_cloud[i] = deepcopy(new_particle_cloud[i])
+        
         return
 
 
@@ -334,7 +321,8 @@ class ParticleFilter:
 
 
     def update_estimated_robot_pose(self):
-        # based on the particles within the particle cloud, update the robot pose estimate
+        """ Based on the particles within the particle cloud, update the 
+        robot pose estimate """
         
         # initialize sum variables to average
         px = py = pz = 0 
@@ -362,6 +350,7 @@ class ParticleFilter:
         self.robot_estimate.orientation.w = ow/num
 
         return
+
     
     def update_particle_weights_with_measurement_model(self, data):
         """ Update the particle weights using the likelihood field for
