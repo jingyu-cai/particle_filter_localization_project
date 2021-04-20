@@ -361,8 +361,6 @@ class ParticleFilter:
         self.robot_estimate.orientation.z = oz/num
         self.robot_estimate.orientation.w = ow/num
 
-        self.publish_particle_cloud()
-
         return
     
     def update_particle_weights_with_measurement_model(self, data):
@@ -373,8 +371,8 @@ class ParticleFilter:
         if not(self.initialized):
             return
 
-        # take into account all 360 degrees of scan data
-        cardinal_directions_idxs = range(360)
+        # take into account 8 directions of data
+        cardinal_directions_idxs = [0, 45, 90, 135, 180, 225, 270, 315]
 
         # compute the new probabilities for all particles based on model
         for part in self.particle_cloud:
@@ -387,9 +385,9 @@ class ParticleFilter:
                 x_ztk = part.pose.position.x + ztk * math.cos(theta + math.radians(ang))
                 y_ztk = part.pose.position.y + ztk * math.sin(theta + math.radians(ang))
                 dist = self.likelihood_field.get_closest_obstacle_distance(x_ztk, y_ztk)
-                # print("x_ztk: " + str(x_ztk) + " y_ztk: " + str(y_ztk) + " dist: " + str(dist))
-                # print("ztk: "+ str(ztk) + " prob: " + str(1 * compute_prob_zero_centered_gaussian(dist, 0.1)) + "\n")
                 q = q * (1 * compute_prob_zero_centered_gaussian(dist, 0.1))
+            if math.isnan(q) or q == 0:
+                q = 1 * 10**(-100)
             part.w = q
 
         return
@@ -420,8 +418,7 @@ class ParticleFilter:
             p.orientation.x = q[0]
             p.orientation.y = q[1]
             p.orientation.z = q[2]
-            p.orientation.w = q[3]           
-        self.publish_particle_cloud()
+            p.orientation.w = q[3]
         
         return
 
