@@ -25,11 +25,11 @@ We followed the steps for implementing the particle filter algorithm illustrated
 ##### Code location
 For initializing the particle cloud, I first wrote a helper function `draw_random_sample()` to randomize the distribution of particles, and the main code is located in the function `initialize_particle_cloud()`. I also used the `quaternion_from_euler()` function from library imports.
 ##### Functions/code description
-* `draw_random_sample()`: In this function, n elements with a specified probability are drawn with replacement from a list of choices. In the context of this project, this function randomly chooses coordinates inside the boundaries of the house from the map list to be populated with particles.
+* `draw_random_sample()`: In this function, n elements with a specified probability are drawn with replacement from a list of choices with the help of `random_sample()` from numpy import. In the context of this project, this function randomly chooses coordinates inside the boundaries of the house from the map list to be populated with particles.
 * `initialize_particle_cloud()`: In this function, particles are being initialized with random locations and orientations throughout the map. By using the `draw_random_sample()` function, I was able to randomly obtain coordinates that correspond to a value of 0, which is light gray color inside the house, from `self.map.data`. These random particles will be used to localize the robot.
 #### Movement model
 ##### Code location
-For the movement model, the code is located in the function `update_particles_with_motion_model()`. I also used the given functions from the starter code and imports, including `get_yaw_from_pos()` and `quaternion_from_euler()`.
+For the movement model, the code is located in the function `update_particles_with_motion_model()`. I also used the given the `get_yaw_from_pos()` function from the starter code.
 ##### Functions/code description
 * `update_particles_with_motion_model()`: This function calculates how much the robot has moved using odometry and updates the poses of all the particles accordingly by the same amount. Therefore, the updated particles can then be fed into the next step in the measurement model.
 #### Measurement model
@@ -41,7 +41,7 @@ For the measurement model, the code is located in the function `update_particle_
 ##### Code location
 For resampling, the code is located in the function `resample_particles()`. 
 ##### Functions/code description
-* `resample_particles()`: For this function, I used the `choice()` function from `np.random` to sample particles with probabilities proportionate to their weights. In other words, particles with greater weights will be more likely to be resampled into the next iteration. 
+* `resample_particles()`: For this function, I used the `choice()` function from numpy to sample particles with probabilities proportionate to their weights. In other words, particles with greater weights will be more likely to be resampled into the next iteration. 
 #### Incorporation of noise
 ##### Code location
 TODO
