@@ -377,8 +377,11 @@ class ParticleFilter:
             q = 1
             for ang in cardinal_directions_idxs:
                 ztk = data.ranges[ang]
+
+                # if an detection is out of range, skip this angle
                 if ztk > 3.5:
                     continue
+
                 theta = get_yaw_from_pose(part.pose)
                 x_ztk = part.pose.position.x + ztk * math.cos(theta + math.radians(ang))
                 y_ztk = part.pose.position.y + ztk * math.sin(theta + math.radians(ang))
@@ -390,7 +393,9 @@ class ParticleFilter:
                 else:
                     prob = compute_prob_zero_centered_gaussian(dist, 0.1)
 
-                q = q * (0.8 * prob + 1)    
+                # update total probability assuming z_hit=0.8, z_err=z_max=0.1
+                q = q * (0.8 * prob + 1)  
+                  
             part.w = q
 
         return
