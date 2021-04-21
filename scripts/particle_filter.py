@@ -81,7 +81,15 @@ class Particle:
 
         # particle weight
         self.w = w
-              
+
+    def __str__(self):
+
+        theta = euler_from_quaternion([
+            self.pose.orientation.x, 
+            self.pose.orientation.y, 
+            self.pose.orientation.z, 
+            self.pose.orientation.w])[2]
+        return ("Particle: [" + str(self.pose.position.x) + ", " + str(self.pose.position.y) + ", " + str(theta) + ", weight: " + str(self.w) + "]")  
 
 class ParticleFilter:
 
@@ -246,6 +254,7 @@ class ParticleFilter:
         # deepcopy these newly sampled particles into particle_cloud
         for i in range(self.num_particles):
             self.particle_cloud[i] = deepcopy(new_particle_cloud[i])
+            #print(self.particle_cloud[i])
         
         return
 
@@ -374,9 +383,10 @@ class ParticleFilter:
                 x_ztk = part.pose.position.x + ztk * math.cos(theta + math.radians(ang))
                 y_ztk = part.pose.position.y + ztk * math.sin(theta + math.radians(ang))
                 dist = self.likelihood_field.get_closest_obstacle_distance(x_ztk, y_ztk)
-                q = q * (1 * compute_prob_zero_centered_gaussian(dist, 0.1))
-            if math.isnan(q) or q == 0:
-                q = 1 * 10**(-100)
+                prob = compute_prob_zero_centered_gaussian(dist, 0.5)
+                if math.isnan(prob) or prob == 0:
+                    prob = 1 * 10**(-100)
+                q = q * (1 * prob)           
             part.w = q
 
         return
