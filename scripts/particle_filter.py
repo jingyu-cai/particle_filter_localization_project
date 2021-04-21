@@ -378,15 +378,19 @@ class ParticleFilter:
             for ang in cardinal_directions_idxs:
                 ztk = data.ranges[ang]
                 if ztk > 3.5:
-                    ztk = 3.5
+                    continue
                 theta = get_yaw_from_pose(part.pose)
                 x_ztk = part.pose.position.x + ztk * math.cos(theta + math.radians(ang))
                 y_ztk = part.pose.position.y + ztk * math.sin(theta + math.radians(ang))
                 dist = self.likelihood_field.get_closest_obstacle_distance(x_ztk, y_ztk)
-                prob = compute_prob_zero_centered_gaussian(dist, 0.5)
-                if math.isnan(prob) or prob == 0:
-                    prob = 1 * 10**(-100)
-                q = q * (1 * prob)           
+
+                # if (x_ztk,y_ztk) is out of the map boundaries 
+                if math.isnan(dist):
+                    prob = 0.00001
+                else:
+                    prob = compute_prob_zero_centered_gaussian(dist, 0.1)
+
+                q = q * (0.8 * prob + 1)    
             part.w = q
 
         return
