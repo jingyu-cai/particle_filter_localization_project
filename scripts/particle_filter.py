@@ -45,6 +45,11 @@ def compute_prob_zero_centered_gaussian(dist, sd):
     
     return prob
 
+def add_error(delta):
+    """ Add random 0-15% error to the given angle/position change (delta)"""
+    percent = randint(-15,15)/100
+    new_delta = delta * (1 + percent)
+    return new_delta
 
 def draw_random_sample(n, list, prob):
     """ Draws a random sample of n elements from a given list of choices 
@@ -124,7 +129,7 @@ class ParticleFilter:
         self.robot_estimate = Pose()
 
         # set threshold values for linear and angular movement before we preform an update
-        self.lin_mvmt_threshold = 0.2        
+        self.lin_mvmt_threshold = 0.2    
         self.ang_mvmt_threshold = (np.pi / 6)
 
         self.odom_pose_last_motion_update = None
@@ -395,7 +400,7 @@ class ParticleFilter:
 
                 # update total probability assuming z_hit=0.8, z_err=z_max=0.1
                 q = q * (0.8 * prob + 1)  
-                  
+
             part.w = q
 
         return
@@ -416,12 +421,12 @@ class ParticleFilter:
         old_yaw = get_yaw_from_pose(self.odom_pose_last_motion_update.pose)
         dyaw = curr_yaw - old_yaw
 
-        # move all the particles correspondingly
+        # move all the particles correspondingly with errors
         for part in self.particle_cloud:          
             p = part.pose
-            p.position.x += dx
-            p.position.y += dy
-            new_yaw = get_yaw_from_pose(p) + dyaw
+            p.position.x += add_error(dx)
+            p.position.y += add_error(dy)
+            new_yaw = get_yaw_from_pose(p) + add_error(dyaw)
             q = quaternion_from_euler(0.0, 0.0, new_yaw)
             p.orientation.x = q[0]
             p.orientation.y = q[1]
