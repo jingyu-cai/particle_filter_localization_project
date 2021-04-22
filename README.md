@@ -46,9 +46,10 @@ For resampling, the code is located in the function `resample_particles()`.
 * `resample_particles()`: For this function, I used the `choice()` function from numpy to sample particles with probabilities proportionate to their weights. In other words, particles with greater weights will be more likely to be resampled into the next iteration. 
 #### Incorporation of noise
 ##### Code location
-TODO
+Noise is incorporated in `update_particles_with_motion_model()`. An helper function `add_noise()` is added to the top of the script.
 ##### Functions/code description
-TODO
+* `add_noise(delta)`: This function takes in the calculated position/yaw change (`delta`) from odometry and randomly adds an error (±0~15%) to it. 
+*  The noise is incorporated by updating the particle poses with the return values of `add_noise()`. 
 #### Updating estimated robot pose
 ##### Code location
 For updating the estimated robot pose, the code is located in the function `update_estimated_robot_pose()`.
@@ -56,9 +57,10 @@ For updating the estimated robot pose, the code is located in the function `upda
 * `update_estimated_robot_pose()`: This function updates the robot's estimated pose by taking an average of all the positions and orientations of the particles. As a result, since particles that more likely represent the likely locations of the robot are preserved, the average would converge onto the robot's true location, thus solving the problem of robot localization.
 #### Optimization of parameters
 ##### Code location
-TODO
+The parameters we optimized are the standard deviation input and estimated sensor errors for particle probability calculations, located in the function `update_particle_weights_with_measurement_model()`. 
 ##### Functions/code description
-TODO
+* We used 0.1 for the standard deviation to ensure quick convergence of the particles. 
+* We estimated that the sensor correctly measures a hit with 80% probability, generate random measures with 10% and fails to detect an object with 10%.
 ### Challenges
 TODO
 ### Future work
