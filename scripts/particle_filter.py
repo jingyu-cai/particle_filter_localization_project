@@ -45,11 +45,15 @@ def compute_prob_zero_centered_gaussian(dist, sd):
     
     return prob
 
+
 def add_error(delta):
-    """ Add random 0-15% error to the given angle/position change (delta)"""
+    """ Add random 0-15% error to the given angle/position change (delta) """
+
     percent = randint(-15,15)/100
     new_delta = delta * (1 + percent)
+
     return new_delta
+
 
 def draw_random_sample(n, list, prob):
     """ Draws a random sample of n elements from a given list of choices 
@@ -95,6 +99,7 @@ class Particle:
             self.pose.orientation.z, 
             self.pose.orientation.w])[2]
         return ("Particle: [" + str(self.pose.position.x) + ", " + str(self.pose.position.y) + ", " + str(theta) + ", weight: " + str(self.w) + "]")  
+
 
 class ParticleFilter:
 
@@ -259,7 +264,6 @@ class ParticleFilter:
         # deepcopy these newly sampled particles into particle_cloud
         for i in range(self.num_particles):
             self.particle_cloud[i] = deepcopy(new_particle_cloud[i])
-            #print(self.particle_cloud[i])
         
         return
 
@@ -384,7 +388,7 @@ class ParticleFilter:
                 ztk = data.ranges[ang]
 
                 # if an detection is out of range, skip this angle
-                if ztk > 3.5:
+                if ztk > data.range_max:
                     continue
 
                 theta = get_yaw_from_pose(part.pose)

@@ -57,10 +57,12 @@ For updating the estimated robot pose, the code is located in the function `upda
 * `update_estimated_robot_pose()`: This function updates the robot's estimated pose by taking an average of all the positions and orientations of the particles. As a result, since particles that more likely represent the likely locations of the robot are preserved, the average would converge onto the robot's true location, thus solving the problem of robot localization.
 #### Optimization of parameters
 ##### Code location
-The parameters we optimized are the standard deviation input and estimated sensor errors for particle probability calculations, located in the function `update_particle_weights_with_measurement_model()`. 
+The parameters we optimized are for handling the position data for edge cases as well as the standard deviation input and estimated sensor errors for particle probability calculations, located in the function `update_particle_weights_with_measurement_model()`.
 ##### Functions/code description
+* If the detection angle is out of range, then we skipped the calculation of that angle completely.
+* If `(x_ztk, y_ztk)` is out of the map boundaries, then we assigned a small value of 0.00001 to `prob` for computing the weight of the particle.
 * We used 0.1 for the standard deviation to ensure quick convergence of the particles. 
-* We estimated that the sensor correctly measures a hit with 80% probability, generate random measures with 10% and fails to detect an object with 10%.
+* We estimated that the sensor correctly measures a hit with 80% probability, generates random measures with 10% and fails to detect an object with 10%.
 ### Challenges
 TODO
 ### Future work
