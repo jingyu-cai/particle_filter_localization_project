@@ -83,6 +83,7 @@ def draw_random_sample(n, list, prob):
 
 class Particle:
 
+
     def __init__(self, pose, w):
 
         # particle pose (Pose object from geometry_msgs)
@@ -90,6 +91,7 @@ class Particle:
 
         # particle weight
         self.w = w
+
 
     def __str__(self):
 
@@ -411,8 +413,8 @@ class ParticleFilter:
         
 
     def update_particles_with_motion_model(self):
-        """ Calculates how much the robot has moved using odometry and
-        move all the particles correspondingly by the same amount """
+        """ Calculates how much the robot has moved using odometry and move 
+        all the particles correspondingly by the same amount with noise """
 
         # calculate how the robot has moved
         curr_x = self.odom_pose.pose.position.x
@@ -445,12 +447,4 @@ if __name__=="__main__":
     pf = ParticleFilter()
 
     rospy.spin()
-
-
-
-
-
-
-
-
 
