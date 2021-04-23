@@ -49,7 +49,7 @@ For resampling, the code is located in the function `resample_particles()`.
 Noise is incorporated in `update_particles_with_motion_model()`. An helper function `add_noise()` is added to the top of the script.
 ##### Functions/code description
 * `add_noise(delta)`: This function takes in the calculated position/yaw change (`delta`) from odometry and randomly adds an error (±0~15%) to it. 
-*  The noise is incorporated by updating the particle poses with the return values of `add_noise()`. 
+* `update_particles_with_motion_model()`: The noise is incorporated by updating the particle poses with the return values of `add_noise()`. 
 #### Updating estimated robot pose
 ##### Code location
 For updating the estimated robot pose, the code is located in the function `update_estimated_robot_pose()`.
